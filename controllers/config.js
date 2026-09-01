@@ -423,7 +423,7 @@ async function generateSiteJSON(options, requestHost, sub, pwd) {
     const enable_py = ENV.get('enable_py', '1');
     if (enable_py === '1' || enable_py === '2') {
         const py_files = readdirSync(pyDir);
-        const api_type = enable_py === '1' ? 4 : 3;
+        const api_type = enable_py === '1' ? 3 : 4;
         let py_valid_files = py_files.filter((file) => file.endsWith('.py') && !file.startsWith('_') && !file.startsWith('base_')); // 筛选出不是 "_" 开头的 .py 文件
         // log(py_valid_files);
         log(`开始生成python的T${api_type}配置，pyDir:${pyDir},源数量: ${py_valid_files.length}`);
