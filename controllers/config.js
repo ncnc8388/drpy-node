@@ -433,7 +433,7 @@ async function generateSiteJSON(options, requestHost, sub, pwd) {
                 func: async ({file, pyDir, requestHost, pwd, SitesMap}) => {
                     const baseName = path.basename(file, '.py'); // 去掉文件扩展名
                     const extJson = path.join(pyDir, baseName + '.json');
-                    let api = enable_py === '1' ? `${requestHost}/py/${file}` : `${requestHost}/api/${baseName}?do=py`;  // 使用请求的 host 地址，避免硬编码端口
+                    let api = enable_py === '1' ? `${requestHost}/api/${baseName}?do=py` : `${requestHost}/api/${baseName}?do=py`;  // 使用请求的 host 地址，避免硬编码端口
                     let ext = existsSync(extJson) ? `${requestHost}/py/${file}` : '';
                     if (pwd) {
                         api += api_type === 3 ? '?' : '&';
