@@ -23,12 +23,12 @@ var rule = {
     推荐: 'ul.c2_list li;a.tcl-img&&title;.tc_img&&data-original;.tc_wz&&Text;a.tcl-img&&href',
     一级: 'ul.c2_list li;a.tcl-img&&title;.tc_img&&data-original;.tc_wz&&Text;a.tcl-img&&href',
     二级: {
-        title: 'h1&&Text',
-        img: '.detail_pic .tc_img&&data-original',
-        desc: '.module-info-tag&&Text',
-        content: '.module-info-introduction&&Text',
-        tabs: '.play-list-group-switch-item',
-        lists: '.play-list-group-content:eq(#id) li'
+        title: 'h1 a&&title',
+        img: '.leftimg .img_wrapper&&data-original',
+        desc: '.playlist-notice sapn.order&&Text',
+        content: '.tab-content ul.con_c2_list li a&&title',
+        tabs: '',
+      lists: '.tab-content ul.con_c2_list li a'
     },
 
     搜索: 'ul.c2_list li;a.tcl-img&&title;a.tcl-img&&href;.tc_img&&data-original;.tc_wz&&Text'

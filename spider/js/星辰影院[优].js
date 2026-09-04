@@ -51,33 +51,35 @@ var rule = {
         return setResult(d)
     },
     一级: async function () {
-        let {input, pdfa, pdfh, pd} = this;
+        let { input, pdfa, pdfh, pd } = this;
+        
         let html = await request(input);
         let d = [];
-        let data = pdfa(html, '.hl-vod-list li');
+        let data = pdfa(html, '.border-box .public-list-div');
         data.forEach((it) => {
             d.push({
                 title: pdfh(it, 'a&&title'),
-                pic_url: pd(it, '.hl-lazy&&data-original'),
-                desc: pdfh(it, '.hl-pic-text&&Text'),
+                pic_url: pd(it, 'img&&data-src'),
+                desc: pdfh(it, 'span.public-list-prb&&Text'),
                 url: pd(it, 'a&&href'),
             })
         });
         return setResult(d)
     },
     二级: async function () {
-        let {input, pdfa, pdfh, pd} = this;
+        let { input, pdfa, pdfh, pd } = this;
+        log(input);
         let html = await request(input);
         let VOD = {};
-        VOD.vod_name = pdfh(html, '.h2&&Text');
+        VOD.vod_name = pdfh(html, 'h3.slide-info-title&&Text');
         VOD.vod_content = pdfh(html, '.hl-dc-content&&.blurb&&Text');
-        let playlist = pdfa(html, '.hl-plays-list')
-        let tabs = pdfa(html, '.hl-plays-from.hl-tabs a');
+        let playlist = pdfa(html, '.anthology-list .anthology-list-box')
+        let tabs = pdfa(html, '.anthology-tab .swiper-wrapper a');
         let playmap = {};
         tabs.map((item, i) => {
             const form = pdfh(item, 'Text')
             const list = playlist[i]
-            const a = pdfa(list, 'body&&a:not(:contains(展开))')
+            const a = pdfa(list, 'ul&&li')
             a.map((it) => {
                 let title = pdfh(it, 'a&&Text')
                 let urls = pd(it, 'a&&href', input)

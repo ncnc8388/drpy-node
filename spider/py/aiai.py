@@ -65,7 +65,7 @@ class Spider(Spider):
     CLIENT = {
         "x-ai-movie-client-name": "dianyingtiantang-frontend",
         "x-ai-movie-client-version": "1.0.0",
-        "x-ai-movie-build-version": "dianyingtiantang-v2026.08.11.1-8cbb0b0d407e-672e67d62528",
+        "x-ai-movie-build-version": "dianyingtiantang-v2026.09.01.4-1b4d6cb27ae4-1b4d6cb27ae4-1b4d6cb27ae4",
         "x-ai-movie-protocol-version": "2026-07-05.library-v2.playback-v1",
     }
 
@@ -118,16 +118,21 @@ class Spider(Spider):
                     "x-ai-movie-signature": sig,
                 }
                 hdrs.update(CLIENT)
+                hdrs["Cookie"] = "ai_movie_home_address_visited_v1=1; ai_movie_session=ums_s4hGebunWGHdL0L2ektmG4JQpby9M0JNEJ1FpOQo-uk"
+                
                 import requests as rq
                 if body is not None:
                     hdrs["Content-Type"] = "application/json"
-                    r = rq.post(host + path, json=body, headers=hdrs, timeout=10)
+                    r = rq.post(host + path, data=json.dumps(body), headers=hdrs, timeout=10)
                 else:
                     r = rq.get(host + path, headers=hdrs, timeout=10)
                 if r.status_code in (200, 201):
                     return r.json()
-            except Exception:
-                pass
+            except rq.exceptions.JSONDecodeError:
+                print(f"[-] JSON解析失败! 后端可能返回了HTML。 Status: {r.status_code}, 内容: {r.text[:200]}")
+            except Exception as e:
+            # 【修改点 4】：打印具体的异常信息，而不是直接 pass
+                print(f"[-] 请求发生异常: {type(e).__name__} - {e}")
             self._hi = (self._hi + 1) % len(HOSTS)
             time.sleep(1)
         return {}
@@ -248,45 +253,35 @@ class Spider(Spider):
 
     def playerContent(self, flag, id, vipFlags=None, vipIds=None):
         tok = str(id or "").strip()
-
-        if not tok:
-            return {"url": ""}
-        murl = YJ % tok
-        print(murl)
-        try:
-            import requests as rq
-            r = rq.get(murl, headers={"User-Agent": UA}, timeout=6)
-            if r.status_code == 200 and "#EXTM3U" in r.text:
-                return {"parse": 0, "url": murl}
-        except Exception:
-            pass
-        try:
-            import requests as rq
-            r = rq.get("https://zy.baipiaozhe.com/v1/playback/yjapi/%s" % tok, headers={"User-Agent": UA, "Accept": "application/json"}, timeout=6)
-            if r.status_code == 200:
-                j = r.json()
-                u = (j.get("url") or "") if isinstance(j, dict) else ""
-                if u:
-                    return {"parse": 0, "url": u}
-        except Exception:
-            pass
+        print(tok)
+        
+        
+      
         j = self._req("GET", "/v1/playback/resolve/%s" % tok)
         lines = j.get("line_options") or []
         wanted = str(flag or "")
+        print(wanted)
         if wanted and wanted != "kanju":
             picked = [l for l in lines if (l.get("provider_name") or "") == wanted]
             lines = picked or lines
+           
         for lo in lines:
+           
             t = lo.get("url") or ""
+            print(t)
             if t.startswith("resolve://"):
                 t = t[10:]
+                
+                rj = self._req("POST", "/v1/playback/resolve-line", {"ticket": t})
+                url = (rj.get("line") or {}).get("url") or ""
+                
+                if url:
+                    return {"parse": 0, "url": url}
             if not t:
                 continue
-            rj = self._req("POST", "/v1/playback/resolve-line", {"ticket": t})
-            url = (rj.get("line") or {}).get("url") or ""
-            if url:
-                return {"parse": 0, "url": url}
-        return {"url": ""}
+            
+            
+        return {"parse": 0, "url": t}
     def isVideoFormat(self, url):
         pass
 

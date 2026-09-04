@@ -559,7 +559,7 @@ var rule = {
             urls.push("原画", url + "#isVideo=true##fastPlayMode##threads=10#");
             urls.push(
                 "原代本",
-                `http://127.0.0.1:7777/?thread=${ENV.get('thread') || 6}&form=urlcode&randUa=1&url=` +
+                `http://127.0.0.1:5575/proxy?thread=${ENV.get('thread') || 6}&form=urlcode&randUa=1&url=` +
                 encodeURIComponent(url)
             );
             return {

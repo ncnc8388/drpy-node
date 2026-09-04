@@ -62,7 +62,7 @@ class Spider(BaseSpider):
     
 
     def init(self, extend=""):
-        self.host = "https://tideember.cc" 
+        self.host = "https://xqjurgek.top/" 
         self.api = self.host + "/api"
         self.name = "黄豆短剧"
         self.platform_key = "7961beb44246e3012ce228d6b5ced05a"

@@ -43,7 +43,7 @@ var rule = {
     searchUrl: '#wd=**&pg=#TruePage##page=fypage',
     url: 'fyclass#pg=fypage&t=fyfilter',
     filter_url: '{{fl.show}}',
-    headers: {'User-Agent': 'okhttp/3.14.9'},
+
     timeout: 5000, // class_name: '电影&电视剧&综艺&动漫',
     limit: 20,
     search_limit: 5, // 搜索限制取前5个，可以注释掉，就不限制搜索
@@ -58,6 +58,11 @@ var rule = {
     showMode: 'groups',// groups按组分类显示 all全部一条线路展示
     groupDict: {},// 搜索分组字典
     tips: '', //二级提示信息
+    headers: {
+    'Host': 'ncncha.cloudns.ch:5757',
+    'User-Agent': 'okhttp/3.12.0',
+    'Connection': 'Keep-Alive'
+  },
     预处理: async function (env) {
         let {publicUrl} = env;
         rule.def_pic = urljoin(publicUrl, './images/lives.jpg');
@@ -74,8 +79,10 @@ var rule = {
             log('当前程序支持批量请求[batchFetch],搜索限制已设置为16');
         }
         let _url = rule.params;
+        log(_url);
         if (_url && typeof (_url) === 'string' && /^(http|file)/.test(_url)) {
             let html = await request(_url);
+        
             let json = JSON.parse(html);
 
             let _classes = [];
@@ -135,6 +142,7 @@ var rule = {
                 html = __ext.data_dict[_get_url];
             } else {
                 html = await request(_get_url);
+                
                 if (/#EXTM3U/.test(html)) {
                     html = convertM3uToNormal(html);
                 } else {
@@ -178,6 +186,7 @@ var rule = {
                 html = __ext.data_dict[_get_url];
             } else {
                 html = await request(_get_url);
+                log(html);
                 if (/#EXTM3U/.test(html)) {
                     html = convertM3uToNormal(html);
                 } else {
@@ -247,7 +256,7 @@ var rule = {
                     if (__ext.data_dict[_get_url]) {
                         html = __ext.data_dict[_get_url];
                     } else {
-                        html = await request(_get_url);
+                        html = await requst(_get_url);
                         if (/#EXTM3U/.test(html)) {
                             html = convertM3uToNormal(html);
                         } else {

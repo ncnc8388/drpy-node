@@ -117,17 +117,38 @@ var rule = {
             if (name) tabs.push(name);
         });
         let lists = [];
+        let xxid = "";
         pdfa(html, '#leftTabBox .bd .numList').forEach(ul => {
             let tmp = [];
             pdfa(ul, 'li').forEach(it => {
                 let name = cleanText(pdfh(it, 'a&&Text'));
                 let url = pdfh(it, 'a&&href');
+                xxid = url;
                 if (name && url) tmp.push(name + '$' + url);
             });
             if (tmp.length) lists.push(tmp.join('#'));
         });
+        
         vod.vod_play_from = tabs.join('$$$');
-        vod.vod_play_url = lists.join('$$$');
+        log(xxid);
+        let playUrl = /^https?:\/\//.test(xxid) ? xxid : rule.host + xxid;
+        log(playUrl);
+        let headers = {
+            'User-Agent': rule.headers['User-Agent'],
+            'Referer': rule.host + '/'
+        };
+    
+        const htmlx = await request(playUrl, { headers: Object.assign({}, rule.headers, { Referer: playUrl }) });
+        
+        let text = String(htmlx || '').replace(/\\\//g, '/');
+        
+        let direct = text.match(/https?:\/\/[^'"\s<>]+\.(m3u8|mp4|flv)(\?[^'"\s<>]*)?/i);
+        log(direct[0]);
+        if (direct && direct[0]) {
+            vod.vod_play_url = direct[0];
+        }
+
+        
         return vod;
     },
     搜索: async function (wd) {
@@ -147,6 +168,14 @@ var rule = {
         return setResult(d);
     },
     lazy: async function (flag, id) {
+        let headerxs = {
+            'User-Agent': rule.headers['User-Agent'],
+            'Referer': rule.host + '/'
+        };
+        {
+            return { parse: 0, jx: 0, url: id, header: headerxs };
+        }
+
         let playUrl = /^https?:\/\//.test(id) ? id : rule.host + id;
         let headers = {
             'User-Agent': rule.headers['User-Agent'],
@@ -155,6 +184,7 @@ var rule = {
         let html = await request(playUrl, { headers: Object.assign({}, rule.headers, { Referer: playUrl }) });
         let purl = '';
         let m = html.match(/player_aaaa\s*=\s*(\{[\s\S]*?\})/);
+        
         if (m && m[1]) {
             try {
                 let player = JSON.parse(m[1]);
@@ -163,6 +193,7 @@ var rule = {
                 else if (player.encrypt == '2') purl = unescape(Buffer.from(purl, 'base64').toString());
             } catch (e) {}
         }
+        
         if (purl && !/^https?:\/\//.test(purl) && !/\.m3u8|\.mp4|\.flv/i.test(purl)) {
             purl = urljoin(rule.host, purl);
         }
@@ -172,11 +203,13 @@ var rule = {
 
         let text = String(html || '').replace(/\\\//g, '/');
         let direct = text.match(/https?:\/\/[^'"\s<>]+\.(m3u8|mp4|flv)(\?[^'"\s<>]*)?/i);
+        log(direct[0]);
         if (direct && direct[0]) {
             return { parse: 0, jx: 0, url: direct[0], header: headers };
         }
 
         let src = pdfh(html, 'video&&src') || pdfh(html, 'source&&src') || pdfh(html, 'iframe&&src');
+        
         if (src) purl = src;
         if (!purl) return { parse: 1, url: playUrl, jx: 0, header: headers };
         if (!/^https?:\/\//.test(purl)) purl = urljoin(rule.host, purl);
