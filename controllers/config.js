@@ -1007,7 +1007,7 @@ export default (fastify, options, done) => {
                 }
             };
 
-            const handleJsMd5 = (cfgPath, requestUrl, options, reply) => {
+            const handleJsMd5 = (cfgPath, requestUrl,requestHost, options, reply) => {
                 const fileMap = {
                     'index.js': 'index.js',
                     'index.config.js': 'index.config.js'
@@ -1017,7 +1017,7 @@ export default (fastify, options, done) => {
                     if (cfgPath.includes(key)) {
                         const filePath = getFilePath(cfgPath, options.rootDir, fileName);
                         let content = readFileSync(filePath, 'utf-8');
-                        content = processContent(content, cfgPath, requestUrl);
+                        content = processContent(content, cfgPath, requestUrl,requestHost);
                         const contentHash = md5(content);
                         console.log(`${fileName} contentHash:`, contentHash);
                         return reply.type('text/plain;charset=utf-8').send(contentHash);
@@ -1029,7 +1029,7 @@ export default (fastify, options, done) => {
             }
 
             if (cfg_path.endsWith('.js.md5')) {
-                return handleJsMd5(cfg_path, requestUrl, options, reply);
+                return handleJsMd5(cfg_path, requestUrl,requestHost, options, reply);
             }
             // 处理订阅码验证
             let sub = null;
