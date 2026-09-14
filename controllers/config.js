@@ -838,7 +838,7 @@ async function generateParseJSON(jxDir, requestHost) {
  * @param {string} requestHost - 请求主机地址
  * @returns {Object} 包含lives数组的对象
  */
-function generateLivesJSON(requestHost) {
+function generateLivesJSONx(requestHost) {
     let lives = [];
     let live_url = process.env.LIVE_URL || '';
     let epg_url = process.env.EPG_URL || ''; // 从.env文件读取
@@ -863,7 +863,54 @@ function generateLivesJSON(requestHost) {
     }
     return {lives}
 }
-
+// 注意：改为 async 函数。请确保 drpy-node 调用此函数的地方支持 await。
+// Node.js 18+ 原生支持 fetch，如果报错，可替换为 drpy-node 内置的 axios.get(remoteLiveUrl)
+async function generateLivesJSON(requestHost) {
+    let lives = [];
+    const remoteLiveUrl = 'https://ncnc8388.github.io/live.json';
+    
+    try {
+        // 1. 尝试从 GitHub 读取 live.json
+        const response = await fetch(remoteLiveUrl);
+        if (response.ok) {
+            const remoteData = await response.json();
+            
+            // 2. 根据你 live.json 的实际结构进行解析
+            if (Array.isArray(remoteData)) {
+                lives = remoteData; // 如果直接是数组
+            } else if (remoteData.lives && Array.isArray(remoteData.lives)) {
+                lives = remoteData.lives; // 如果外层包了一层 { lives: [...] }
+            } else {
+                lives.push(remoteData); // 如果是单个对象
+            }
+        }
+    } catch (error) {
+        console.error('读取远程 live.json 失败，回退到本地备用配置:', error.message);
+        
+        // 3. 容错机制：如果网络请求失败，回退到你原来的本地逻辑
+        let live_url = process.env.LIVE_URL || '';
+        let epg_url = process.env.EPG_URL || '';
+        let logo_url = process.env.LOGO_URL || '';
+        
+        if (live_url && !live_url.startsWith('http')) {
+            let public_url = urljoin(requestHost, 'public/');
+            live_url = urljoin(public_url, live_url);
+        }
+        if (live_url) {
+            lives.push({
+                "name": "直播",
+                "type": 0,
+                "url": live_url,
+                "playerType": 1,
+                "ua": "okhttp/3.12.13",
+                "epg": epg_url,
+                "logo": logo_url
+            });
+        }
+    }
+    
+    return { lives };
+}
 /**
  * 生成播放器配置JSON数据
  * 读取播放器配置文件并返回配置对象
@@ -1081,7 +1128,7 @@ export default (fastify, options, done) => {
 
             // 生成各类配置数据
             const parseJSON = await generateParseJSON(options.jxDir, requestHost);
-            const livesJSON = generateLivesJSON(requestHost);
+            const livesJSON = await generateLivesJSON(requestHost);
             const playerJSON = generatePlayerJSON(options.configDir, requestHost);
             // 合并所有配置数据
             const configObj = {sites_count: siteJSON.sites.length, ...playerJSON, ...siteJSON, ...parseJSON, ...livesJSON};
