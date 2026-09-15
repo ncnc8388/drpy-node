@@ -900,7 +900,7 @@ async function generateLivesJSON(requestHost) {
             lives.push({
                 "name": "直播",
                 "type": 0,
-                "url": live_url,
+                "url": "https://ncnc8388.github.io/hnyd.m3u",
                 "playerType": 1,
                 "ua": "okhttp/3.12.13",
                 "epg": epg_url,
