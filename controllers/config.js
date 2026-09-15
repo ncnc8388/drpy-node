@@ -1033,8 +1033,10 @@ export default (fastify, options, done) => {
             // }
             const getFilePath = (cfgPath, rootDir, fileName) => path.join(rootDir, `data/cat/${fileName}`);
             const processContent = (content, cfgPath, requestUrl, requestHost) => {
-                const $config_url = requestUrl.replace(cfgPath, `/1?sub=${cat_sub_code}&healthy=1&pwd=${process.env.API_PWD || ''}`);
-                return content.replaceAll('$config_url', $config_url).replaceAll('$host', requestHost);
+                const fixedHost = "https://drpy.zfyzdb.kdns.fr"; 
+                const $config_url = `${fixedHost}/config/1?sub=${cat_sub_code}&healthy=1&pwd=${process.env.API_PWD || ''}`;
+                //const $config_url = requestUrl.replace(cfgPath, `/1?sub=${cat_sub_code}&healthy=1&pwd=${process.env.API_PWD || ''}`);
+                return content.replaceAll('$config_url', $config_url).replaceAll('$host', fixedHost);
             }
 
 
