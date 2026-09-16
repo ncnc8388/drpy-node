@@ -420,7 +420,7 @@ async function generateSiteJSON(options, requestHost, sub, pwd) {
     }
 
     // 根据用户是否启用py源去生成对应配置
-const enable_py = ENV.get('enable_py', '1');
+   const enable_py = ENV.get('enable_py', '1');
 if (enable_py === '1' || enable_py === '2') {
     const py_files = readdirSync(pyDir);
     const api_type = enable_py === '1' ? 3 : 4; // 全局默认类型
