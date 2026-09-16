@@ -421,102 +421,113 @@ async function generateSiteJSON(options, requestHost, sub, pwd) {
 
     // 根据用户是否启用py源去生成对应配置
     const enable_py = ENV.get('enable_py', '1');
-    if (enable_py === '1' || enable_py === '2') {
-        const py_files = readdirSync(pyDir);
-        const api_type = enable_py === '1' ? 4 : 4;
-        let py_valid_files = py_files.filter((file) => file.endsWith('.py') && !file.startsWith('_') && !file.startsWith('base_')); // 筛选出不是 "_" 开头的 .py 文件
-        // log(py_valid_files);
-        log(`开始生成python的T${api_type}配置，pyDir:${pyDir},源数量: ${py_valid_files.length}`);
+if (enable_py === '1' || enable_py === '2') {
+    const py_files = readdirSync(pyDir);
+    const default_api_type = enable_py === '1' ? 3 : 4; // <-- 修改点1: 重命名为 default_api_type 以区分动态类型
+    let py_valid_files = py_files.filter((file) => file.endsWith('.py') && !file.startsWith('_') && !file.startsWith('base_')); // 筛选出不是 "_" 开头的 .py 文件
+    
+    // <-- 修改点2: 更新日志提示，说明 T3 开头的特殊规则
+    log(`开始生成python配置 (默认T${default_api_type}, T3开头文件强制T3), pyDir:${pyDir}, 源数量: ${py_valid_files.length}`);
 
-        const py_tasks = py_valid_files.map((file) => {
-            return {
-                func: async ({file, pyDir, requestHost, pwd, SitesMap}) => {
-                    const baseName = path.basename(file, '.py'); // 去掉文件扩展名
-                    const extJson = path.join(pyDir, baseName + '.json');
-                    let api = enable_py === '1' ? `${requestHost}/api/${baseName}?do=py` : `${requestHost}/api/${baseName}?do=py`;  // 使用请求的 host 地址，避免硬编码端口
-                    let ext = existsSync(extJson) ? `${requestHost}/py/${file}` : '';
-                    if (pwd) {
-                        api += api_type === 3 ? '?' : '&';
-                        api += `pwd=${pwd}`;
-                        if (ext) {
-                            ext += `?pwd=${pwd}`;
-                        }
+    const py_tasks = py_valid_files.map((file) => {
+        return {
+            func: async ({file, pyDir, requestHost, pwd, SitesMap}) => {
+                const baseName = path.basename(file, '.py'); // 去掉文件扩展名
+                
+                // <-- 修改点3: 动态计算当前文件的 api_type。如果文件名以 'T3' 开头，则强制为 3，否则使用全局默认值
+                const current_api_type = baseName.startsWith('T3') ? 3 : default_api_type;
+                
+                const extJson = path.join(pyDir, baseName + '.json');
+                
+                // 注：原代码中 enable_py === '1' 的两边结果一样，这里做了简化，保持功能不变
+                let api = `${requestHost}/api/${baseName}?do=py`;  
+                
+                let ext = existsSync(extJson) ? `${requestHost}/py/${file}` : '';
+                if (pwd) {
+                    // 根据当前文件的实际 api_type 来决定拼接 ? 还是 &
+                    api += current_api_type === 3 ? '?' : '&';
+                    api += `pwd=${pwd}`;
+                    if (ext) {
+                        ext += `?pwd=${pwd}`;
                     }
-                    let ruleObject = {
-                        searchable: 1, // 固定值
-                        filterable: 1, // 固定值
-                        quickSearch: 1, // 固定值
-                    };
-                    guessRuleType(baseName, ruleObject);
-                    let ruleMeta = {...ruleObject};
-                    const filePath = path.join(pyDir, file);
-                    const header = await FileHeaderManager.readHeader(filePath);
-                    // console.log('py header:', header);
-                    if (!header || forceHeader) {
-                        const fileContent = await readFile(filePath, 'utf-8');
-                        const title = extractNameFromCode(fileContent) || baseName;
-                        Object.assign(ruleMeta, {
-                            title: title,
-                            lang: 'hipy',
-                        });
-                        // console.log('py ruleMeta:', ruleMeta);
-                        await FileHeaderManager.writeHeader(filePath, ruleMeta);
-                    } else {
-                        Object.assign(ruleMeta, header);
-                    }
-                    if (!isLoaded) {
-                        const sizeInBytes = await FileHeaderManager.getFileSize(filePath, {humanReadable: true});
-                        console.log(`Loading RuleObject: ${filePath} fileSize:${sizeInBytes}`);
-                    }
-                    ruleMeta.title = enableRuleName ? ruleMeta.title || baseName : baseName;
-
-                    let fileSites = [];
-                    ext = ext || ruleMeta.ext || '';
-                    const isMuban = mubanKeys.includes(baseName) || /^(APP|getapp3)/.test(baseName);
-                    if (baseName === 'push_agent') {
-                        let key = 'push_agent';
-                        let name = `${ruleMeta.title}(hipy)`;
-                        fileSites.push({key, name, ext});
-                    } else if (isMuban && SitesMap.hasOwnProperty(baseName) && Array.isArray(SitesMap[baseName])) {
-                        // console.log(SitesMap[baseName]);
-                        SitesMap[baseName].forEach((it) => {
-                            let key = `hipy_py_${it.alias}`;
-                            let name = `${it.alias}(hipy)`;
-                            let _ext = it.queryObject.type === 'url' ? it.queryObject.params : it.queryStr;
-                            if (_ext && _ext !== it.queryStr) {
-                                _ext = jsEncoder.gzip(_ext);
-                            } else {
-                                if (!enableOldConfig) {
-                                    _ext = parseExt(_ext);
-                                }
-                            }
-                            console.log(`[HIPY-${baseName}] alias name: ${name},typeof _ext:${typeof _ext},_ext: ${logExt(_ext)}`);
-                            fileSites.push({key, name, ext: _ext});
-                        });
-                    } else if (isMuban) {
-                        return
-                    } else {
-                        let key = `hipy_py_${ruleMeta.title}`;
-                        let name = `${ruleMeta.title}(hipy)`;
-                        fileSites.push({key, name, ext});
-                    }
-
-                    fileSites.forEach((fileSite) => {
-                        const site = {
-                            key: fileSite.key,
-                            name: fileSite.name,
-                            type: api_type, // 固定值
-                            api,
-                            ...ruleMeta,
-                            ext: fileSite.ext || "", // 固定为空字符串
-                        };
-                        sites.push(site);
+                }
+                
+                let ruleObject = {
+                    searchable: 1, // 固定值
+                    filterable: 1, // 固定值
+                    quickSearch: 1, // 固定值
+                };
+                guessRuleType(baseName, ruleObject);
+                let ruleMeta = {...ruleObject};
+                const filePath = path.join(pyDir, file);
+                const header = await FileHeaderManager.readHeader(filePath);
+                
+                if (!header || forceHeader) {
+                    const fileContent = await readFile(filePath, 'utf-8');
+                    const title = extractNameFromCode(fileContent) || baseName;
+                    Object.assign(ruleMeta, {
+                        title: title,
+                        lang: 'hipy',
                     });
-                },
-                param: {file, pyDir, requestHost, pwd, SitesMap},
-                id: file,
-            };
-        });
+                    await FileHeaderManager.writeHeader(filePath, ruleMeta);
+                } else {
+                    Object.assign(ruleMeta, header);
+                }
+                
+                if (!isLoaded) {
+                    const sizeInBytes = await FileHeaderManager.getFileSize(filePath, {humanReadable: true});
+                    console.log(`Loading RuleObject: ${filePath} fileSize:${sizeInBytes}`);
+                }
+                ruleMeta.title = enableRuleName ? ruleMeta.title || baseName : baseName;
+
+                let fileSites = [];
+                ext = ext || ruleMeta.ext || '';
+                const isMuban = mubanKeys.includes(baseName) || /^(APP|getapp3)/.test(baseName);
+                
+                if (baseName === 'push_agent') {
+                    let key = 'push_agent';
+                    let name = `${ruleMeta.title}(hipy)`;
+                    fileSites.push({key, name, ext});
+                } else if (isMuban && SitesMap.hasOwnProperty(baseName) && Array.isArray(SitesMap[baseName])) {
+                    SitesMap[baseName].forEach((it) => {
+                        let key = `hipy_py_${it.alias}`;
+                        let name = `${it.alias}(hipy)`;
+                        let _ext = it.queryObject.type === 'url' ? it.queryObject.params : it.queryStr;
+                        if (_ext && _ext !== it.queryStr) {
+                            _ext = jsEncoder.gzip(_ext);
+                        } else {
+                            if (!enableOldConfig) {
+                                _ext = parseExt(_ext);
+                            }
+                        }
+                        console.log(`[HIPY-${baseName}] alias name: ${name},typeof _ext:${typeof _ext},_ext: ${logExt(_ext)}`);
+                        fileSites.push({key, name, ext: _ext});
+                    });
+                } else if (isMuban) {
+                    return;
+                } else {
+                    let key = `hipy_py_${ruleMeta.title}`;
+                    let name = `${ruleMeta.title}(hipy)`;
+                    fileSites.push({key, name, ext});
+                }
+
+                fileSites.forEach((fileSite) => {
+                    const site = {
+                        key: fileSite.key,
+                        name: fileSite.name,
+                        type: current_api_type, // <-- 修改点4: 使用动态计算的 current_api_type，而不是固定的 api_type
+                        api,
+                        ...ruleMeta,
+                        ext: fileSite.ext || "", 
+                    };
+                    sites.push(site);
+                });
+            },
+            param: {file, pyDir, requestHost, pwd, SitesMap},
+            id: file,
+        };
+    });
+    // ... 后续代码保持不变
 
         await batchExecute(py_tasks, listener);
 
