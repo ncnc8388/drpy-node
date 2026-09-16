@@ -425,11 +425,10 @@ if (enable_py === '1' || enable_py === '2') {
     const py_files = readdirSync(pyDir);
     const api_type = enable_py === '1' ? 3 : 4; // 全局默认类型
     let py_valid_files = py_files.filter((file) => file.endsWith('.py') && !file.startsWith('_') && !file.startsWith('base_')); // 筛选出不是 "_" 开头的 .py 文件
-    const disabledPy = includeDisabled ? null : getDisabledFilenameSet('spider/py');
-    if (disabledPy) py_valid_files = py_valid_files.filter((file) => !disabledPy.has(file));
+   // const disabledPy = includeDisabled ? null : getDisabledFilenameSet('spider/py');
+   // if (disabledPy) py_valid_files = py_valid_files.filter((file) => !disabledPy.has(file));
     
     // log(py_valid_files);
-    // <-- 修改点 1: 更新日志提示，说明 T3 开头的特殊规则
     log(`开始生成python配置 (默认T${api_type}, T3开头文件强制T3), pyDir:${pyDir}, 源数量: ${py_valid_files.length}`);
 
     const py_tasks = py_valid_files.map((file) => {
@@ -437,15 +436,18 @@ if (enable_py === '1' || enable_py === '2') {
             func: async ({file, pyDir, requestHost, pwd, SitesMap}) => {
                 const baseName = path.basename(file, '.py'); // 去掉文件扩展名
                 
-                // <-- 修改点 2: 动态计算当前文件的 api_type。如果文件名以 'T3' 开头，则强制为 3，否则使用全局默认值
+                // 1. 动态判断当前文件的类型：T3开头强制为3，否则使用全局默认值
                 const current_api_type = baseName.startsWith('T3') ? 3 : api_type;
                 
                 const extJson = path.join(pyDir, baseName + '.json');
-                let api = enable_py === '1' ? `${requestHost}/py/${file}` : `${requestHost}/api/${baseName}?do=py`;  // 使用请求的 host 地址，避免硬编码端口
-                let ext = existsSync(extJson) ? `${requestHost}/py/${file}` : '';
                 
+                // 2. 【关键修复】api 路径必须与 current_api_type 严格保持一致！
+                // type 3 对应 /py/文件名, type 4 对应 /api/文件名?do=py
+                let api = current_api_type === 3 ? `${requestHost}/py/${file}` : `${requestHost}/api/${baseName}?do=py`;
+                
+                let ext = existsSync(extJson) ? `${requestHost}/py/${file}` : '';
                 if (pwd) {
-                    // <-- 修改点 3: 使用动态的 current_api_type 来决定拼接 ? 还是 &
+                    // 3. 密码拼接符也根据当前文件的实际类型决定
                     api += current_api_type === 3 ? '?' : '&';
                     api += `pwd=${pwd}`;
                     if (ext) {
@@ -516,8 +518,7 @@ if (enable_py === '1' || enable_py === '2') {
                     const site = {
                         key: fileSite.key,
                         name: fileSite.name,
-                        // <-- 修改点 4: 使用动态计算的 current_api_type，而不是固定的全局 api_type
-                        type: current_api_type, 
+                        type: current_api_type, // 4. 使用动态计算出的类型
                         api,
                         ...ruleMeta,
                         ext: fileSite.ext || "", // 固定为空字符串
