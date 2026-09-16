@@ -473,15 +473,15 @@ if (enable_py === '1' || enable_py === '2') {
                         lang: 'hipy',
                     });
                     // log('py ruleMeta:', ruleMeta);
-                    try {
+                   // try {
                             // 如果存在 VERCEL 环境变量，说明在云端，直接跳过写入
-                            if (!process.env.VERCEL) {
-                                await FileHeaderManager.writeHeader(filePath, ruleMeta);
-                            }
-                        } catch (writeErr) {
+                         //   if (!process.env.VERCEL) {
+                        //        await FileHeaderManager.writeHeader(filePath, ruleMeta);
+                        //    }
+                     //   } catch (writeErr) {
                             // 双重保险：如果还是报错，直接忽略，不影响后续生成配置
-                            log(`[警告] 写入 py header 失败(可能是只读环境): ${writeErr.message}`);
-                        }
+                     //       log(`[警告] 写入 py header 失败(可能是只读环境): ${writeErr.message}`);
+                     //   }
                 } else {
                     Object.assign(ruleMeta, header);
                 }
