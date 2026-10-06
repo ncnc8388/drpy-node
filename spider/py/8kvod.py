@@ -7,9 +7,9 @@ from urllib.parse import quote, unquote, urljoin
 import requests
 import urllib3
 urllib3.disable_warnings()
-
-class Spider:
-    def __init__(self):
+ from base.spider import Spider as BaseSpider
+class Spider(BaseSpider):
+    def __init__(self, query_params=None, t4_api=None):
         self.host = "https://www.8kvod.com"
         self.headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
