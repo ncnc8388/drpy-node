@@ -5,6 +5,7 @@
  * 影视TV 弹幕支持
  * https://t.me/fongmi_offical/
  * https://github.com/FongMi/Release/tree/main/apk
+ *"Cookie": "SESSDATA=eaba7290%2C1806469255%2C1ccce6a2CjDL6v7eWx76ZW5CqTvGhCvRwKB6hQ4UDK97Weo7HQ-uR9ov6KIMrUAvPON_7UwX3SkSVnNVMkQ2WHM2MlBralhkTVBFVGZmYnFKS0ZnTXUtNjBjSTFKclFNU1hnSG1SUUhjVTJHWXVEUmhMMHJ3bUU2XzMzSkFseDA1ZHRPbG02RzV4SV82Wm1nIIEC;bili_jct=87bfcb2e7de97ba456f182bf82bf7c15;buvid3=0AE62994-0C54-6BF3-FA5B-E57289EE50AB89963infoc;"
  * 皮皮虾DMBox 弹幕支持
  * 设置 > 窗口预览 > 开启
  * https://t.me/pipixiawerun
@@ -57,7 +58,7 @@
     headers: {
         "User-Agent": "PC_UA",
         "Referer": "https://www.bilibili.com",
-        "Cookie": "SESSDATA=eaba7290%2C1806469255%2C1ccce6a2CjDL6v7eWx76ZW5CqTvGhCvRwKB6hQ4UDK97Weo7HQ-uR9ov6KIMrUAvPON_7UwX3SkSVnNVMkQ2WHM2MlBralhkTVBFVGZmYnFKS0ZnTXUtNjBjSTFKclFNU1hnSG1SUUhjVTJHWXVEUmhMMHJ3bUU2XzMzSkFseDA1ZHRPbG02RzV4SV82Wm1nIIEC;bili_jct=87bfcb2e7de97ba456f182bf82bf7c15;buvid3=0AE62994-0C54-6BF3-FA5B-E57289EE50AB89963infoc;"
+        "Cookie": "bili_jct=87bfcb2e7de97ba456f182bf82bf7c15;"
     },
     timeout: 5000,
     limit: 8,
