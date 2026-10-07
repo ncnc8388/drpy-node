@@ -9,6 +9,10 @@
 			"type_name": "桌游棋牌",
 			"type_id": "桌游棋牌"
 		},
+		{  
+			"type_name": "短剧",
+			"type_id": "短剧"
+		},
 		{
 			"type_name": "美食",
 			"type_id": "美食超清"
