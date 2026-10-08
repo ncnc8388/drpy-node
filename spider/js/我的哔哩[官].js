@@ -35,7 +35,7 @@
     title: '我的哔哩[官]',
     host: 'https://api.bilibili.com',
     homeUrl: '/x/web-interface/ranking/v2?rid=0&type=origin',
-    url: '/x/web-interface/search/type?search_type=video&fyfilter',
+    url: '/x/web-interface/wbi/search/type?search_type=video&fyfilter',
     filter_url: 'keyword=fyclass{{fl.tid}}&page=fypage&duration={{fl.duration}}&order={{fl.order}}',
     class_parse: async function () {
         // let html = request('{{host}}/files/json/哔哩教育.json');
@@ -49,8 +49,8 @@
         }
     },
     filterable: 1,
-    detailUrl: '/x/web-interface/view/detail?aid=fyid',
-    searchUrl: '/x/web-interface/search/type?search_type=video&keyword=**&page=fypage',
+    detailUrl: '/x/web-interface/wbi/view/detail?aid=fyid',
+    searchUrl: '/x/web-interface/wbi/search/type?search_type=video&keyword=**&page=fypage',
     searchable: 2,
     quickSearch: 0,
     // params: '?render=1&type=url&params=../json/哔哩教育.json@哔哩教育[官]',
@@ -69,7 +69,7 @@
         let ids = input.split('_');
         let dan = 'https://api.bilibili.com/x/v1/dm/list.so?oid=' + ids[1];
         let result = {};
-        let iurl = 'https://api.bilibili.com:443/x/player/playurl?avid=' + ids[0] + '&cid=' + ids[1] + '&qn=116';
+        let iurl = 'https://api.bilibili.com:443/x/player/wbi/playurl?avid=' + ids[0] + '&cid=' + ids[1] + '&qn=116';
         let html = await request(iurl);
         let jRoot = JSON.parse(html);
         let jo = jRoot.data;
@@ -130,7 +130,7 @@
         let {input, MY_CATE, MY_PAGE} = this;
         if (MY_CATE.endsWith('_clicklink')) {
             MY_CATE = MY_CATE.split('_')[0];
-            input = rule.host + '/x/web-interface/search/type?search_type=video&keyword=' + MY_CATE + '&page=' + MY_PAGE;
+            input = rule.host + '/x/web-interface/wbi/search/type?search_type=video&keyword=' + MY_CATE + '&page=' + MY_PAGE;
         }
         let data = [];
         let vodList = [];
